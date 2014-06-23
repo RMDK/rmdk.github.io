@@ -1,4 +1,18 @@
 
+.progress {
+    height:30px;
+    position:relative;
+}
+.progress span {
+    float:left;
+    display: block;
+    width: 100%;
+    color: white;
+    font-size:13px;
+    margin-top:9px;
+    font-family: Century gothic,"Helvetica Neue",Helvetica,Arial,sans-serif;
+ }
+
 body {
     overflow-x: hidden;
 }
