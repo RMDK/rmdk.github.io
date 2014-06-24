@@ -182,7 +182,7 @@ header .intro-text .skills {
 }
 
 section {
-    padding: 100px 0;
+    padding: 50px 0;
 }
 
 section h2 {
@@ -194,6 +194,13 @@ section.success {
     color: #fff;
     background: #18bc9c;
 }
+
+section.dividers {
+    color: #fff;
+    background: #18bc9c;
+    padding: 15px 0;
+}
+
 
 @media(max-width:767px) {
     section {
