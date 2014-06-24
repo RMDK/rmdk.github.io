@@ -182,7 +182,7 @@ header .intro-text .skills {
 }
 
 section {
-    padding: 50px 0;
+    padding: 100px 0;
 }
 
 section h2 {
@@ -198,7 +198,7 @@ section.success {
 section.dividers {
     color: #fff;
     background: #18bc9c;
-    padding: 15px 0;
+    padding: 15px;
 }
 
 
@@ -361,7 +361,7 @@ footer .footer-col {
 }
 
 footer .footer-below {
-    padding: 25px 0;
+    padding: 15px 0;
     background-color: #233140;
 }
 
