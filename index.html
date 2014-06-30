@@ -43,11 +43,7 @@
       ga('require', 'displayfeatures');
       ga('create', 'UA-50584517-2', 'auto');
       ga('send', 'pageview');
-
-    </script>
-
-    <script>
-        /**
+       /**
         * Function that tracks a click on an outbound link in Google Analytics.
         * This function takes a valid URL string as an argument, and uses that URL string
         * as the event label.
@@ -58,8 +54,10 @@
              document.location = url;
              }
            });
-        }
-        </script>
+        };
+
+    </script>
+
 
     <!-- IE8 support for HTML5 elements and media queries -->
     <!--[if lt IE 9]>
@@ -159,7 +157,7 @@
                 <div class="col-md-3">
                     <div class="list-group-">
                       <a href="#portfolio" class="list-group-item active"><h4>Tutorials in R </h4></a>
-                      
+
                       <a href="http://rpubs.com/ryankelly/21379" target="_blank" class="list-group-item" onclick="trackOutboundLink(‘http://rpubs.com/ryankelly/21379’); return false;">Classification: Logistic Regression <span class="label label-info">New</span></a>
                       <a href="http://rpubs.com/ryankelly/LDA-QDA" target="_blank" class="list-group-item" onclick="trackOutboundLink(‘http://rpubs.com/ryankelly/LDA-QDA’); return false;">Classification: LDA and QDA <span class="label label-info">New</span></a>
                       <a href="http://rpubs.com/ryankelly/ts1" target="_blank" class="list-group-item" onclick="trackOutboundLink(‘http://rpubs.com/ryankelly/ts1’); return false;">Time Series Analysis 1</a>
