@@ -1,0 +1,341 @@
+<!-- <!DOCTYPE html> -->
+<!-- <meta charset="utf-8"> -->
+<!-- PRELIMINARY CODE -->
+<html>
+<head>
+
+<style>
+
+/*LEGEND STYLE*/
+.my-legend{
+  margin: 0 auto;
+  float:left;
+}
+.my-legend .legend-title {
+    text-align: left;
+    margin-bottom: 10px;
+    font-weight: bold;
+    font-size: 90%;
+    font-family: Century gothic;
+    }
+  .my-legend .legend-scale ul {
+    margin: 0;
+    margin-bottom: 5px;
+    padding: 0;
+    float: left;
+    list-style: none;
+    }
+  .my-legend .legend-scale ul li {
+    font-size: 80%;
+    list-style: none;
+    margin-left: 0;
+    line-height: 18px;
+    margin-bottom: 2px;
+    font-family: Century gothic;
+    }
+  .my-legend ul.legend-labels li span {
+    display: block;
+    float: left;
+    height: 16px;
+    width: 30px;
+    margin-right: 5px;
+    margin-left: 0;
+    border: 1px solid #999;
+    }
+  .my-legend .legend-source {
+    font-size: 70%;
+    color: #999;
+    clear: both;
+    }
+  .my-legend a {
+    color: #777;
+  }
+
+/*END LEGEND STYLE*/
+
+.state-boundary {
+  fill: none;
+  stroke: #fff;
+
+}
+
+.subunit-label:hover {
+  fill: #fff;
+  font-family:Century gothic;
+  fill-opacity: .5;
+  font-size: 10px;
+  font-weight: 300;
+  text-anchor: middle;
+}
+
+
+.mine_text{
+  fill: #fff;
+  fill-opacity: .6;
+  font-size: 9px;
+  font-weight: 300;
+  text-anchor: center;
+}
+
+.land {
+  fill: #ccc;
+}
+
+.subunit-boundary {
+  fill: #fff;
+  fill-opacity: .6;
+  font-size: 9px;
+  font-weight: 300;
+  text-anchor: middle;
+}
+
+.background {
+  fill: none;
+  pointer-events: all;
+}
+
+.feature {
+  fill: #5B5B5B;
+  cursor: pointer;
+}
+
+.feature.active {
+  fill: gray;
+  /*fill-opacity: 0.6;*/
+}
+
+.mesh {
+  fill: none;
+  stroke: #fff;
+  stroke-width:0.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+div.tooltip {   
+  position: absolute;           
+  text-align: center;           
+  width: auto;                  
+  height: auto;                 
+  padding: 3px;             
+  font: 12px sans-serif;        
+  background: lightgray;   
+  border: 1px;      
+  font-family: Century gothic;        
+  pointer-events: none;
+
+}
+
+.state-label {
+  fill: #fff;
+  fill-opacity: .5;
+  font-size: 10px;
+  font-weight: 300;
+  text-anchor: middle;
+}
+
+</style>
+	<title>Gold Mines: USA</title>
+</head>
+<body>
+
+<h1 style="text-align:center; font-family: Century gothic">Gold Mines in the USA</h1>
+<h2 style="text-align:center;font-family: Century gothic; color:#5B5B5B;">click to zoom in on a state, and pan around</h2>
+<hr>
+<div class='my-legend'>
+<div class='legend-title'>Current Mine Status</div>
+<div class='legend-scale'>
+  <ul class='legend-labels'>
+    <li><span style='background:red; opacity:0.7;'></span>Active</li>
+    <li><span style='background:yellow; opacity:0.7;'></span>Intermittent / Idled</li>
+    <li><span style='background:lightgray;'></span>Abandonded / Non Producing</li>
+  
+  </ul>
+</div>
+<div class='legend-source'>Source: <a href="http://www.msha.gov/OpenGovernmentData/OGIMSHA.asp#.U3Nxbl6RPwL">US Department of Labor: MSHA</a></div>
+</div>
+
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script src="http://d3js.org/topojson.v1.min.js"></script>
+
+<div id="map">
+<script>
+
+
+//initial size based on first window size
+var margin = {top: 10, left: 10, bottom: 10, right: 10},
+  width = parseInt(d3.select('#map').style('width')),
+  width = (width - margin.left - margin.right)*0.8,
+  mapRatio = 0.5,
+  height = width * mapRatio;
+
+var active = d3.select(null);
+
+// set color scale 
+var color = d3.scale.ordinal()
+                    .domain(["Active", "Abandoned", "Intermittent", "NonProducing","Temporarily Idled"])
+                    .range(["red", "white",
+                     "yellow", "white","yellow"]);
+// set projects
+var projection = d3.geo.albersUsa()
+    .scale(width)
+    .translate([width / 2, height / 2]);
+
+var path = d3.geo.path()
+    .projection(projection);
+
+var zoom = d3.behavior.zoom()
+    .translate([0, 0])
+    .scale(1)
+    .scaleExtent([1, 35])
+    .on("zoom", zoomed);
+
+// initialize svg
+var svg = d3.select("body").append("svg")
+    .attr("width", width)
+    .attr("height", height)
+    .attr("float", "right")
+    .on("click", stopped, true);
+
+svg.append("rect")
+    .attr("class", "background")
+    .attr("width", width)
+    .attr("height", height)
+    .on("click", reset);
+//initialize grouping variable
+var g = svg.append("g");
+
+svg
+    .call(zoom) // delete this line to disable free zooming
+    .call(zoom.event);
+// append map to body
+var div = d3.select("body").append("div")  
+    .attr("class", "tooltip")               
+    .style("opacity", 0);
+
+// load in USA states polygons
+d3.json("data/us_states_simpl.topo.json", function(error, us) {
+
+  g.selectAll("path")
+      .data(topojson.feature(us, us.objects.us_states_simp).features)
+    .enter().append("path")
+      .attr("d", path)
+      .attr("class", "feature")
+      .on("click", clicked);
+
+      //Show state name abbrev
+        g.selectAll("state-label")
+          .data(topojson.feature(us, us.objects.us_states_simp).features)
+        .enter().append("text")
+          .attr("class", function(d) { return "state-label " + d.properties.abbrev; })
+          .attr("transform", function(d) { return "translate(" + path.centroid(d) + ")"; })
+          .text(function(d) { return d.properties.abbrev; });
+  
+  // Generate boundary between states
+  g.append("path")
+      .datum(topojson.mesh(us, us.objects.us_states_simp, function(a, b) { return a !== b; }))
+      .attr("class", "mesh")
+      .attr("d", path);
+
+// Add mining data
+d3.csv("data/goldmines_cleaned.csv", function(error, data) {
+
+  var mine = g.selectAll("g")
+    .data(data)
+    .enter()
+    .append("g");
+//Add points
+  mine.append("circle")
+    .attr("cx", function(d) {
+       return projection([d.lon, d.LATITUDE])[0];
+     })
+     .attr("cy", function(d) {
+       return projection([d.lon, d.LATITUDE])[1];
+     })
+ 
+     .attr("r", 5)
+     .style("opacity", 0.6)
+     // fill with color scheme
+     .style("fill", function(d) {
+          //Get data value
+          var value = d.CURRENT_MINE_STATUS;
+
+          if (value) {
+                  //If value exists…
+                  return color(value);
+          } else {
+                  //If value is undefined…
+                  return "#fff";
+          }})
+                   
+// specify mouseover/tooltip behavior
+     .on("mouseover", function(d) {
+        div.transition()        
+            .duration(200)      
+            .style("opacity", 0.9);   
+        div .html("<b>"+d.CURRENT_MINE_NAME+"</b>"+"<br>"+
+          "<b>"+"Operator: "+"</b>"+d.CURRENT_OPERATOR_NAME+"<br>"+
+          "<b>"+"Tailings Ponds: "+"</b>"+d.NO_TAILING_PONDS+"<br>"+
+          "<b>"+"Contact Office: "+"</b>"+d.OFFICE_NAME+"<br>"
+          )
+
+            .style("left", (d3.event.pageX + 15) + "px")     
+            .style("top", (d3.event.pageY - 28) + "px");    
+        })
+    // remove tooltip                  
+    .on("mouseout", function(d) {       
+        div.transition()         
+            .duration(500)      
+            .style("opacity", 0);
+            });
+  });
+
+});
+
+function clicked(d) {
+  if (active.node() === this) return reset();
+  active.classed("active", false);
+  active = d3.select(this).classed("active", true);
+
+  var bounds = path.bounds(d),
+      dx = bounds[1][0] - bounds[0][0],
+      dy = bounds[1][1] - bounds[0][1],
+      x = (bounds[0][0] + bounds[1][0]) / 2,
+      y = (bounds[0][1] + bounds[1][1]) / 2,
+      scale = 0.9 / Math.max(dx / width, dy / height),
+      translate = [width / 2 - scale * x, height / 2 - scale * y];
+
+  svg.transition()
+      .duration(550)
+      .call(zoom.translate(translate).scale(scale).event);
+}
+
+function reset() {
+  active.classed("active", false);
+  active = d3.select(null);
+
+  svg.transition()
+      .duration(550)
+      .call(zoom.translate([0, 0]).scale(1).event);
+}
+
+function zoomed() {
+  g.style("stroke-width", 1.5 / d3.event.scale + "px");
+  g.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+  g.selectAll("circle")  
+  .attr("r",5/d3.event.scale); 
+
+}
+
+// If the drag behavior prevents the default click,
+// also stop propagation so we don’t click-to-zoom.
+function stopped() {
+  if (d3.event.defaultPrevented) d3.event.stopPropagation();
+}
+
+
+</script>
+</div>
+
+</body>
+</html>
