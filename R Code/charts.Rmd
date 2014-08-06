@@ -1,0 +1,73 @@
+---
+title: "Interactive Chart Example"
+output:
+  html_document:
+    fig_width: 8
+    toc: yes
+date: "June 30, 2014"
+---
+
+[My website](http://www.rmdk.ca)
+
+```{r loadLibs,message=FALSE}
+library(ggplot2)
+library(xlsx)
+library(reshape2)
+library(scales)
+```
+
+### Without Interactivity
+```{r fig6.5Load}
+# series used for figures 6.1, 6.3 et S6.1
+s5 = read.xlsx("../Piketty2014FiguresTables/Chapter6TablesFigures.xlsx",
+               sheetName="TS6.3", rowIndex=4:45,colIndex=1:9,header=TRUE)
+
+names(s5) =  c('Year','U.S.', 'Japan', 'Germany', 
+               'France',	'U.K.',	'Italy',	'Canada',	'Australia')
+```
+
+
+```{r fig6.5Clean}
+s5 <- melt(s5, id.vars = 'Year')
+# round data for rChart tooltip display
+s5$value <- round(s5$value, 2)
+```
+
+
+```{r fig6.5Plot, fig.retina=2}
+ggplot(data = s5, aes(x=Year, y=value))+
+  geom_line(aes(color=variable))+
+#   geom_point(aes(shape=variable))+
+  scale_y_continuous(labels = percent)+
+  scale_x_continuous(breaks=seq(1975, 2010, 5), labels=seq(1975, 2010, 5))+
+  ylab('Capital income (% national income)')+
+  xlab('Capital income absorbs between 15% and 25% of national income\n in rich countries in 1970, and between 25% and 30% in 2000-2010.\n Sources and series: see piketty.pse.ens.fr/capital21c')+
+  ggtitle('Figure 6.5. The capital share in rich countries, 1975-2010')+
+  theme_bw(10)+ # Make b/w theme
+  theme(legend.title=element_blank())+ # remove legend title
+  theme(legend.position="bottom")
+```
+
+###This is pretty impossible to read... Let's make it interactive.
+
+##Interactive with rCharts
+
+The plot above is rather difficult to read with so many series. Recommend taking advantage of an interactive [rChart](http://ramnathv.github.io/rCharts/). Now we can toggle the countries `on and off` by clicking the legend labels.
+
+```{r install rCharts, eval=FALSE}
+require(devtools)
+install_github('rCharts', 'ramnathv')
+```
+
+```{r plotrChart, comment = NA, results = "asis", comment = NA, tidy = F}
+library(rCharts)
+
+fig6.5 <- nPlot(value ~ Year, group = 'variable', data = s5, type = 'lineChart') 
+fig6.5$yAxis(axisLabel = 'Capital income (% national income)')
+fig6.5$chart(margin = list(left = 100)) # margin makes room for label
+fig6.5$yAxis(tickFormat = "#! function(d) {return Math.round(d*100*100)/100 + '%'} !#")
+fig6.5$xAxis(axisLabel = 'Year')
+fig6.5$chart(useInteractiveGuideline=TRUE)
+
+fig6.5$show('inline', include_assets = TRUE, cdn = TRUE)
+```
